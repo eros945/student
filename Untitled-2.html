@@ -1,0 +1,161 @@
+ <html>
+<div style="margin-bottom:20px; border:1px solid #050505; padding:10px;">
+    <form id="scheduleForm" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+        <select id="day" required>
+            <option value="">День</option>
+            <option>Понедельник</option>
+            <option>Вторник</option>
+            <option>Среда</option>
+            <option>Четверг</option>
+            <option>Пятница</option>
+        </select>
+        <input type="number" id="lesson" min="1" max="8" placeholder="Пара" required style="width:60px;">
+        <input type="text" id="subject" placeholder="Предмет" required>
+        <input type="text" id="room" placeholder="Кабинет" required style="width:80px;">
+        <input type="text" id="category" placeholder="Категория (например, точные/гуманитарные)" style="width:140px;">
+        <select id="status">
+            <option value="">Статус</option>
+            <option value="актуально">Актуально</option>
+            <option value="отменено">Отменено</option>
+            <option value="перенесено">Перенесено</option>
+        </select>
+        <button type="submit">Добавить</button>
+        <button type="button" id="resetBtn">Сбросить</button>
+    </form>
+    <div style="margin-top:10px;">
+        <input type="text" id="search" placeholder="Поиск по предмету/кабинету..." style="width:200px;">
+        <select id="filterStatus">
+            <option value="">Все статусы</option>
+            <option value="актуально">Актуально</option>
+            <option value="отменено">Отменено</option>
+            <option value="перенесено">Перенесено</option>
+        </select>
+        <input type="text" id="filterCategory" placeholder="Фильтр по категории..." style="width:140px;">
+    </div>
+</div>
+<table border="1" cellpadding="5" cellspacing="0" id="scheduleTable">
+        <thead>
+        <tr>
+                <th>День</th>
+                <th>Пара</th>
+                <th>Предмет</th>
+                <th>Кабинет</th>
+                <th>Категория</th>
+                <th>Статус</th>
+                <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+</table>
+<script>
+// --- Данные по умолчанию ---
+const defaultSchedule = [
+    {day:'Понедельник', lesson:1, subject:'Математика', room:'101', category:'Точные', status:'актуально'},
+    {day:'Понедельник', lesson:2, subject:'Русский язык', room:'102', category:'Гуманитарные', status:'актуально'},
+    {day:'Понедельник', lesson:3, subject:'История', room:'103', category:'Гуманитарные', status:'актуально'},
+    {day:'Понедельник', lesson:4, subject:'Физкультура', room:'Спортзал', category:'Физкультура', status:'актуально'},
+    {day:'Вторник', lesson:1, subject:'Литература', room:'104', category:'Гуманитарные', status:'актуально'},
+    {day:'Вторник', lesson:2, subject:'Английский язык', room:'105', category:'Гуманитарные', status:'актуально'},
+    {day:'Вторник', lesson:3, subject:'Биология', room:'106', category:'Естественные', status:'актуально'},
+    {day:'Среда', lesson:1, subject:'География', room:'107', category:'Естественные', status:'актуально'},
+    {day:'Среда', lesson:2, subject:'Математика', room:'101', category:'Точные', status:'актуально'},
+    {day:'Среда', lesson:3, subject:'Информатика', room:'108', category:'Точные', status:'актуально'},
+    {day:'Четверг', lesson:1, subject:'Физика', room:'109', category:'Точные', status:'актуально'},
+    {day:'Четверг', lesson:2, subject:'Химия', room:'110', category:'Точные', status:'актуально'},
+    {day:'Четверг', lesson:3, subject:'Русский язык', room:'102', category:'Гуманитарные', status:'актуально'},
+    {day:'Пятница', lesson:1, subject:'Обществознание', room:'111', category:'Гуманитарные', status:'актуально'},
+    {day:'Пятница', lesson:2, subject:'Математика', room:'101', category:'Точные', status:'актуально'},
+    {day:'Пятница', lesson:3, subject:'Литература', room:'104', category:'Гуманитарные', status:'актуально'},
+    {day:'Пятница', lesson:4, subject:'Технология', room:'112', category:'Технология', status:'актуально'}
+];
+function getSchedule() {
+    return JSON.parse(localStorage.getItem('schedule') || 'null') || defaultSchedule.slice();
+}
+function saveSchedule(data) {
+    localStorage.setItem('schedule', JSON.stringify(data));
+}
+let editingIndex = null;
+function renderTable() {
+    const tbody = document.querySelector('#scheduleTable tbody');
+    tbody.innerHTML = '';
+    let data = getSchedule();
+    // Фильтрация
+    const search = document.getElementById('search').value.toLowerCase();
+    const filterStatus = document.getElementById('filterStatus').value;
+    const filterCategory = document.getElementById('filterCategory').value.toLowerCase();
+    data = data.filter(item => {
+        let ok = true;
+        if (search && !(item.subject.toLowerCase().includes(search) || item.room.toLowerCase().includes(search))) ok = false;
+        if (filterStatus && item.status !== filterStatus) ok = false;
+        if (filterCategory && !(item.category && item.category.toLowerCase().includes(filterCategory))) ok = false;
+        return ok;
+    });
+    data.forEach((item, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${item.day}</td>
+            <td>${item.lesson}</td>
+            <td>${item.subject}</td>
+            <td>${item.room}</td>
+            <td>${item.category||''}</td> 
+            <td>${item.status||''}</td>
+            <td>
+                <button onclick="editRow(${i})">✏️</button>
+                <button onclick="deleteRow(${i})">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+function addOrEditRow(e) {
+    e.preventDefault();
+    const day = document.getElementById('day').value;
+    const lesson = +document.getElementById('lesson').value;
+    const subject = document.getElementById('subject').value;
+    const room = document.getElementById('room').value;
+    const category = document.getElementById('category').value;
+    const status = document.getElementById('status').value;
+    let data = getSchedule();
+    const newItem = {day, lesson, subject, room, category, status};
+    if (editingIndex !== null) {
+        data[editingIndex] = newItem;
+        editingIndex = null;
+    } else {
+        data.push(newItem);
+    }
+    saveSchedule(data);
+    document.getElementById('scheduleForm').reset();
+    renderTable();
+}
+function deleteRow(i) {
+    let data = getSchedule();
+    if (confirm('Удалить запись?')) {
+        data.splice(i, 1);
+        saveSchedule(data);
+        renderTable();
+    }
+}
+function editRow(i) {
+    let data = getSchedule();
+    const item = data[i];
+    document.getElementById('day').value = item.day;
+    document.getElementById('lesson').value = item.lesson;
+    document.getElementById('subject').value = item.subject;
+    document.getElementById('room').value = item.room;
+    document.getElementById('category').value = item.category||'';
+    document.getElementById('status').value = item.status||'';
+    editingIndex = i;
+}
+document.getElementById('scheduleForm').addEventListener('submit', addOrEditRow);
+document.getElementById('resetBtn').addEventListener('click', function() {
+    editingIndex = null;
+    document.getElementById('scheduleForm').reset();
+});
+document.getElementById('search').addEventListener('input', renderTable);
+document.getElementById('filterStatus').addEventListener('change', renderTable);
+document.getElementById('filterCategory').addEventListener('input', renderTable);
+// Первичная отрисовка
+if (!localStorage.getItem('schedule')) saveSchedule(defaultSchedule);
+renderTable();
+</script>
+</html>
