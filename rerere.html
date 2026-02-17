@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Библиотека книг</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    form { margin-bottom: 20px; }
+    input, select { margin: 5px; padding: 5px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>Библиотека книг</h1>
+  <form id="bookForm">
+    <input type="text" id="title" placeholder="Название книги" required>
+    <input type="text" id="category" placeholder="Жанр" required>
+    <input type="number" id="year" placeholder="Год" required>
+    <input type="number" id="price" placeholder="Цена" required>
+    <select id="status">
+      <option value="в наличии">в наличии</option>
+      <option value="выдана">выдана</option>
+      <option value="списана">списана</option>
+    </select>
+    <button type="submit">Добавить книгу</button>
+  </form>
+  <table id="libraryTable">
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Жанр</th>
+        <th>Год</th>
+        <th>Цена</th>
+        <th>Статус</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    class Book {
+      constructor(title, category, year, price, status) {
+        this.title = title;
+        this.category = category;
+        this.year = year;
+        this.price = price;
+        this.status = status;
+      }
+    }
+
+    let library = [
+      new Book("Война и мир", "Роман", 1869, 1500, "в наличии"),
+      new Book("Преступление и наказание", "Роман", 1866, 1200, "выдана"),
+      new Book("Мастер и Маргарита", "Фантастика", 1967, 1800, "в наличии"),
+      new Book("Три мушкетёра", "Приключения", 1844, 1000, "списана")
+    ];
+
+    function renderLibrary() {
+      const tbody = document.querySelector("#libraryTable tbody");
+      tbody.innerHTML = "";
+      library.forEach(book => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${book.title}</td>
+          <td>${book.category}</td>
+          <td>${book.year}</td>
+          <td>${book.price} ₸</td>
+          <td>${book.status}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    document.getElementById("bookForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const category = document.getElementById("category").value;
+      const year = document.getElementById("year").value;
+      const price = document.getElementById("price").value;
+      const status = document.getElementById("status").value;
+
+      const book = new Book(title, category, year, price, status);
+      library.push(book); 
+
+      renderLibrary();
+      this.reset();
+    });
+
+    renderLibrary();
+  </script>
+</body>
+</html>
