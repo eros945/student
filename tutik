@@ -1,0 +1,100 @@
+enum Role {
+  Admin = "Admin",
+  Teacher = "Teacher",
+  Student = "Student",
+}
+
+interface User {
+  readonly id: string | number; 
+  name: string;
+  role: Role;
+}
+
+function printUserInfo(user: User): void {
+  switch (user.role) {
+    case Role.Admin:
+      console.log(`Администратор: ${user.name} (ID: ${user.id})`);
+      break;
+    case Role.Teacher:
+      console.log(`Преподаватель: ${user.name} (ID: ${user.id})`);
+      break;
+    case Role.Student:
+      console.log(`Студент: ${user.name} (ID: ${user.id})`);
+      break;
+  }
+}
+
+const users: User[] = [
+  { id: 1, name: "Иван", role: Role.Admin },
+  { id: 2, name: "Мария", role: Role.Teacher },
+  { id: 3, name: "Петр", role: Role.Student },
+];
+
+users.forEach(printUserInfo);
+
+const students = users.filter((u) => u.role === Role.Student);
+console.log("Студенты:", students);
+
+function greet(name: string, age?: number): void {
+  if (age) {
+    console.log(`Привет, ${name}! Тебе ${age} лет.`);
+  } else {
+    console.log(`Привет, ${name}!`);
+  }
+}
+
+function multiply(a: number, b: number = 2): number {
+  return a * b;
+}
+
+type Course = {
+  id: number;
+  title: string;
+  description?: string;
+};
+
+class CourseManager {
+  private courses: Course[] = [];
+
+  addCourse(course: Course): void {
+    this.courses.push(course);
+  }
+
+  removeCourse(id: number): void {
+    this.courses = this.courses.filter((c) => c.id !== id);
+  }
+
+  listCourses(): void {
+    console.log("Список курсов:");
+    this.courses.forEach((c) => console.log(`${c.id}: ${c.title}`));
+  }
+}
+
+const manager = new CourseManager();
+manager.addCourse({ id: 1, title: "TypeScript Basics" });
+manager.addCourse({ id: 2, title: "Advanced TypeScript" });
+manager.listCourses();
+manager.removeCourse(1);
+manager.listCourses();
+
+
+
+
+C:\Program Files\nodejs\node.exe .\maint.js
+Администратор: Иван (ID: 1)
+maint.js:10
+Преподаватель: Мария (ID: 2)
+maint.js:13
+Студент: Петр (ID: 3)
+maint.js:16
+Студенты: (1) [{…}]
+maint.js:27
+Список курсов:
+maint.js:51
+1: TypeScript Basics
+maint.js:52
+2: Advanced TypeScript
+maint.js:52
+Список курсов:
+maint.js:51
+2: Advanced TypeScript
